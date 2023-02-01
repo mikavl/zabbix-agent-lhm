@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibreHardwareMonitor.Hardware;
+using System;
 
 namespace ZabbixAgentLHM
 {
