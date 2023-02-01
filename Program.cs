@@ -1,5 +1,7 @@
 ﻿using LibreHardwareMonitor.Hardware;
 using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ZabbixAgentLHM
 {
@@ -10,64 +12,107 @@ namespace ZabbixAgentLHM
             ZabbixAgentLHM zal = new ZabbixAgentLHM();
             UpdateVisitor uv = new UpdateVisitor();
 
-            zal.Open();
             zal.Gather(uv);
-            zal.Close();
+            zal.PrintJson();
         }
 
     }
 
+    // https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/migrate-from-newtonsoft?pivots=dotnet-6-0#conditionally-ignore-a-property
+    public class HardwareHack
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("sensors")]
+        public List<SensorHack> Sensors { get; }
+
+        public HardwareHack(string name, HardwareType type)
+        {
+            this.Name = name;
+            this.Sensors = new List<SensorHack>();
+        }
+    }
+
+    public class SensorHack
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("value")]
+        public float? Value { get; set; }
+
+        public SensorHack(string name, float? sensorValue)
+        {
+            this.Name = name;
+            this.Value = sensorValue;
+        }
+    }
+
     public class ZabbixAgentLHM
     {
-
         private Computer computer;
+
+        private List<HardwareHack> hardware;
+        private List<SensorType> sensorTypes;
 
         public ZabbixAgentLHM()
         {
             this.computer = new Computer
             {
                 IsCpuEnabled = true,
-                IsGpuEnabled = false, // Use nvidia-smi for this
-                IsMemoryEnabled = false, // Use zabbix-agent directly for this
                 IsMotherboardEnabled = true,
-                IsControllerEnabled = false, // I don't own the hardware
-                IsNetworkEnabled = false, // Use zabbix-agent directly for this
                 IsStorageEnabled = true,
             };
-
+            this.hardware = new List<HardwareHack>();
+            this.sensorTypes = new List<SensorType>()
+            {
+                SensorType.Power,
+                SensorType.Temperature,
+                SensorType.Fan
+            };
         }
 
-        private void IterateHardware(IHardware hardware)
+        public void PrintJson()
         {
-            foreach (IHardware subhardware in hardware.SubHardware)
+            string jsonString = JsonSerializer.Serialize(this.hardware);
+
+            Console.WriteLine("{{\"hardware\":{0}}}", jsonString);
+        }
+
+        private void processHardware(IHardware hardware)
+        {
+            HardwareHack h = new HardwareHack(hardware.Name, hardware.HardwareType);
+
+            foreach (ISensor sensor in hardware.Sensors)
             {
-                this.IterateHardware(subhardware);
+                if (this.sensorTypes.Contains(sensor.SensorType)) {
+                    h.Sensors.Add(new SensorHack(sensor.Name, sensor.Value));
+                }
             }
 
-            foreach(ISensor sensor in hardware.Sensors)
-            {
-                Console.WriteLine("{0},{1},{2},{3},{4}", hardware.HardwareType.ToString(), hardware.Name.ToString(), sensor.Name.ToString(), sensor.Value.ToString(), sensor.SensorType.ToString());
+            if (h.Sensors.Count > 0) {
+                this.hardware.Add(h);
             }
         }
+
 
         public void Gather(IVisitor visitor)
         {
+            this.computer.Open();
+
             this.computer.Accept(visitor);
 
             foreach (IHardware hardware in this.computer.Hardware)
             {
-                this.IterateHardware(hardware);
+                foreach (IHardware subhardware in hardware.SubHardware)
+                {
+                    this.processHardware(subhardware);
+                }
+
+                this.processHardware(hardware);
             }
 
-        }
-
-        public void Open()
-        {
-            this.computer.Open();
-        }
-
-        public void Close()
-        {
             this.computer.Close();
         }
 
