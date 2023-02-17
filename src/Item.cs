@@ -6,13 +6,11 @@ using YamlDotNet.Serialization;
 
 public class Item
 {
-    public string? Uuid { get; set; }
-
+    public string? Uuid { get; set; } = Utilities.NewUuid();
     public string? Name { get; set; }
-
-    public string? Type { get; set; }
-
     public string? Key { get; set; }
+
+    public string? Type { get; set; } = "DEPENDENT";
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public int? Delay { get; set; }
@@ -20,13 +18,11 @@ public class Item
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public string? Units { get; set; }
 
-    public string? Params { get; set; }
-
     public string? ValueType { get; set; }
 
-    public List<Preprocessor> Preprocessing { get; set; }
+    public List<Preprocessor> Preprocessing { get; }
 
-    public IDictionary<string, string> MasterItem { get; set; }
+    public IDictionary<string, string> MasterItem { get; }
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public int? History { get; set; }
@@ -41,6 +37,26 @@ public class Item
     {
         this.MasterItem = new Dictionary<string, string>();
         this.Preprocessing = new List<Preprocessor>();
+        this.Uuid = Utilities.NewUuid();
+    }
+
+    public Item(
+        string prefix,
+        string hardwareName,
+        string sensorName,
+        SensorType sensorType,
+        float? sensorValue
+        ) : this()
+    {
+        this.SetName(hardwareName, sensorName);
+        this.SetKey(prefix, hardwareName, sensorName);
+        this.SetUnits(sensorType);
+        this.AddDefaultPreprocessor();
+        this.Type = "DEPENDENT";
+        this.ValueType = "FLOAT";
+        this.Value = sensorValue;
+        this.Delay = 0;
+
     }
 
     public void SetName(string hardware, string sensor)
@@ -90,7 +106,7 @@ public class Item
         this.Preprocessing.Add(pp);
     }
 
-    public void SetMasterItem(string key)
+    public void AddMasterItem(string key)
     {
         this.MasterItem.Add("key", key);
     }
