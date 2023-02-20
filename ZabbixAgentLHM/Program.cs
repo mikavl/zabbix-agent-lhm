@@ -1,31 +1,39 @@
 ﻿using LibreHardwareMonitor.Hardware;
 
 using System.Text;
+using System.Text.Json;
 using System;
 using System.Linq;
 using System.CommandLine;
 using System.Security.Cryptography;
 
-// HardwareType does not directly correspond to what we want to pass, so use a new enum
-public enum ComputerHardwareType {
-    Battery,
-    Controller,
-    Cpu,
-    Gpu,
-    Memory,
-    Motherboard,
-    Network,
-    Psu,
-    Storage
-};
+
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+
+namespace ZabbixAgentLHM;
 
 class Program
 {
     static async Task Main(string[] args)
     {
+        var rootCommand = AddCommands();
+        await rootCommand.InvokeAsync(args);
+    }
+
+    static RootCommand AddCommands()
+    {
+        //
+        // Command definitions
+        //
+
         var rootCommand = new RootCommand("Zabbix agent integration with LibreHardwareMonitor");
         var gatherCommand = new Command("gather", "Gather sensor data");
         var templateCommand = new Command("template", "Write Zabbix template");
+
+        //
+        // Common command options
+        //
 
         var prefixOption = new Option<string>(
             name: "--prefix",
@@ -48,6 +56,10 @@ class Program
         );
         hardwareTypesOption.AddAlias("-t");
 
+        //
+        // Template command options
+        //
+
         var outputOption = new Option<string>(
             name: "--output",
             description: "Save Zabbix template to this file instead of stdout"
@@ -68,6 +80,10 @@ class Program
         );
         templateNameOption.AddAlias("-n");
 
+        //
+        // Associate commands and options
+        //
+
         templateCommand.Add(outputOption);
         templateCommand.Add(prefixOption);
         templateCommand.Add(sensorTypesOption);
@@ -82,108 +98,111 @@ class Program
         rootCommand.Add(gatherCommand);
         rootCommand.Add(templateCommand);
 
+        //
+        // Command handlers
+        //
 
         gatherCommand.SetHandler((
                 prefixOptionValue,
-                sensorTypesOptionValue,
-                hardwareTypesOptionValue
+                hardwareTypesOptionValue,
+                sensorTypesOptionValue
             ) => Gather(
                 prefixOptionValue,
-                sensorTypesOptionValue,
-                hardwareTypesOptionValue
+                hardwareTypesOptionValue,
+                sensorTypesOptionValue
             ),
             prefixOption,
-            sensorTypesOption,
-            hardwareTypesOption
+            hardwareTypesOption,
+            sensorTypesOption
         );
 
         templateCommand.SetHandler((
-                outputOptionValue,
                 prefixOptionValue,
-                sensorTypesOptionValue,
                 hardwareTypesOptionValue,
+                sensorTypesOptionValue,
+                outputOptionValue,
                 templateGroupOptionValue,
                 templateNameOptionValue
             ) => Template(
-                outputOptionValue,
                 prefixOptionValue,
-                sensorTypesOptionValue,
                 hardwareTypesOptionValue,
+                sensorTypesOptionValue,
+                outputOptionValue,
                 templateGroupOptionValue,
                 templateNameOptionValue
             ),
-            outputOption,
             prefixOption,
-            sensorTypesOption,
             hardwareTypesOption,
+            sensorTypesOption,
+            outputOption,
             templateGroupOption,
             templateNameOption
         );
 
-        await rootCommand.InvokeAsync(args);
+        return rootCommand;
     }
 
-    static List<SensorType> ParseSensorTypes(string s)
-    {
-        SensorType sensorTypeEnum;
-        List<SensorType> sensorTypes = new List<SensorType>();
 
-        foreach (var sensorType in s.Split(",")) {
-            if (Enum.TryParse<SensorType>(sensorType, true, out sensorTypeEnum)) {
-                sensorTypes.Add(sensorTypeEnum);
-            } else {
-                throw new System.Exception($"Unknown sensor type {sensorType}");
+    static void Gather(string prefix, string hardwareTypesString, string sensorTypesString)
+    {
+        var sensorTypes = Utilities.ParseSensorTypes(sensorTypesString);
+        var hardwareTypes = Utilities.ParseHardwareTypes(hardwareTypesString);
+        var visitor = new Visitor(
+            prefix,
+            hardwareTypes,
+            sensorTypes
+        );
+
+        visitor.Gather();
+
+        IDictionary<string, float> sensorDict = new Dictionary<string, float>();
+
+        foreach(var item in visitor.Export.Templates.First().Items)
+        {
+            if (!String.IsNullOrEmpty(item.Key))
+            {
+                sensorDict.Add(item.Key, item.Value ?? 0);
             }
         }
 
-        return sensorTypes;
-    }
-
-
-    static List<ComputerHardwareType> ParseHardwareTypes(string s)
-    {
-        ComputerHardwareType hardwareTypeEnum;
-        List<ComputerHardwareType> hardwareTypes = new List<ComputerHardwareType>();
-
-        foreach (var hardwareType in s.Split(",")) {
-            if (Enum.TryParse<ComputerHardwareType>(hardwareType, true, out hardwareTypeEnum)) {
-                hardwareTypes.Add(hardwareTypeEnum);
-            } else {
-                throw new System.Exception($"Unknown hardware type {hardwareType}");
-            }
-        }
-
-        return hardwareTypes;
-    }
-
-    static void Gather(string prefix, string sensorTypes, string hardwareTypes)
-    {
-        List<SensorType> sts = ParseSensorTypes(sensorTypes);
-        List<ComputerHardwareType> hws = ParseHardwareTypes(hardwareTypes);
-
-        ZabbixAgentLHM zal = new ZabbixAgentLHM(sts, hws, prefix);
-        Visitor v = new Visitor();
-
-        zal.Gather(v);
-        zal.PrintJson();
+        Console.WriteLine(JsonSerializer.Serialize(sensorDict));
     }
 
     static void Template(
-        string output,
         string prefix,
-        string sensorTypes,
-        string hardwareTypes,
+        string hardwareTypesString,
+        string sensorTypesString,
+        string output,
         string templateGroupName,
         string templateName)
     {
-        List<SensorType> sts = ParseSensorTypes(sensorTypes);
-        List<ComputerHardwareType> hws = ParseHardwareTypes(hardwareTypes);
+        var sensorTypes = Utilities.ParseSensorTypes(sensorTypesString);
+        var hardwareTypes = Utilities.ParseHardwareTypes(hardwareTypesString);
+        var visitor = new Visitor(
+            prefix,
+            hardwareTypes,
+            sensorTypes,
+            templateName,
+            templateGroupName
+        );
 
-        ZabbixAgentLHM zal = new ZabbixAgentLHM(sts, hws, prefix, templateGroupName, templateName);
-        Visitor v = new Visitor();
+        visitor.Gather();
 
-        zal.Gather(v);
-        zal.PrintYaml();
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitEmptyCollections | DefaultValuesHandling.OmitNull)
+            .Build();
+
+        if (String.IsNullOrEmpty(output))
+        {
+            serializer.Serialize(Console.Out, visitor);
+        }
+        else
+        {
+            using var writer = new System.IO.StreamWriter(output);
+            serializer.Serialize(writer, visitor);
+        }
     }
 
 }
+

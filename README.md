@@ -65,7 +65,7 @@ The `gather` subcommand gathers sensor data, and the `template` subcommand gener
 
 This project is licensed under the [MIT license](LICENSE).
 
-[LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/) is licensed under the Mozilla Public License Version 2.0.
+[LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/) is licensed under the Mozilla Public License Version 2.0. See [Licenses/LibreHardwareMonitor.html](Licenses/LibreHardwareMonitor.html) for a copy of the license.
 
 [YamlDotNet](https://github.com/aaubry/YamlDotNet) is licensed under its respective license.
 
