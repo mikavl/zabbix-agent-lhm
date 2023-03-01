@@ -105,6 +105,7 @@ public class Visitor : IVisitor
                 item.Delay = 0;
                 item.SetMasterItem("lhm.gather");
                 item.Preprocessing.Add(Utilities.NewDefaultPreprocessor(item.Key));
+                item.Tags.Add(new Tag("Component", Utilities.ComponentName(hardware.HardwareType)));
 
                 this.Export.Templates.First().Items.Add(item);
             }

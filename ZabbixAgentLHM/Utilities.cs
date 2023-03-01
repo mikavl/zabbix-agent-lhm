@@ -69,6 +69,50 @@ public static class Utilities
     }
 
     //
+    // Return a value for the Component tag corresponding to the ComputerHardwareType.
+    // Mostly just does capitalization as I prefer "CPU" to "Cpu".
+    // See:
+    // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/HardwareType.cs
+    //
+    public static string ComponentName(HardwareType ht)
+    {
+        switch (ht)
+        {
+
+            case HardwareType.Motherboard:
+                return "Motherboard";
+            case HardwareType.SuperIO:
+                // I'll just use motherboard also here for my purposes. See:
+                // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/Motherboard/SuperIOHardware.cs
+                return "Motherboard";
+            case HardwareType.Cpu:
+                return "CPU";
+            case HardwareType.Memory:
+                return "Memory";
+            case HardwareType.GpuNvidia:
+                return "GPU";
+            case HardwareType.GpuAmd:
+                return "GPU";
+            case HardwareType.GpuIntel:
+                return "GPU";
+            case HardwareType.Storage:
+                return "Storage";
+            case HardwareType.Network:
+                return "Network";
+            case HardwareType.Cooler:
+                return "Cooler";
+            case HardwareType.EmbeddedController:
+                return "Embedded controller";
+            case HardwareType.Psu:
+                return "PSU";
+            case HardwareType.Battery:
+                return "Battery";
+            default:
+                throw new System.Exception($"No component tag value specified for {ht.ToString()}");
+        }
+    }
+
+    //
     // For a complete list of LHM sensors and their units, see:
     // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/ISensor.cs
     //

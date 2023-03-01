@@ -34,6 +34,8 @@ public class Item
 
     public string? ValueType { get; set; } = "FLOAT";
 
+    public IList<Tag> Tags { get; } = new List<Tag>();
+
     public void SetMasterItem(string key)
     {
         this.MasterItem.Add("key", key);
