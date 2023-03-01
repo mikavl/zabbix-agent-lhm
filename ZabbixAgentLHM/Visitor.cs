@@ -3,26 +3,14 @@ using YamlDotNet.Serialization;
 
 namespace ZabbixAgentLHM;
 
-public enum ComputerHardwareType {
-    Battery,
-    Controller,
-    Cpu,
-    Gpu,
-    Memory,
-    Motherboard,
-    Network,
-    Psu,
-    Storage
-};
-
 public class Visitor : IVisitor
 {
     [YamlMember(Alias = "zabbix_export")]
-    public Zabbix.Export Export { get; }
+    public Export Export { get; }
 
     private IList<ComputerHardwareType> HardwareTypes;
 
-    private IList<Zabbix.Item> Items { get; } = new List<Zabbix.Item>();
+    private IList<Item> Items { get; } = new List<Item>();
 
     private string Prefix { get; }
 
@@ -37,8 +25,8 @@ public class Visitor : IVisitor
         this.HardwareTypes = hardwareTypes;
         this.SensorTypes = sensorTypes;
 
-        this.Export = new Zabbix.Export();
-        this.Export.Templates.Add(new Zabbix.Template());
+        this.Export = new Export();
+        this.Export.Templates.Add(new Template());
     }
 
     public Visitor(
@@ -52,19 +40,19 @@ public class Visitor : IVisitor
         this.HardwareTypes = hardwareTypes;
         this.SensorTypes = sensorTypes;
 
-        var group = new Zabbix.Group();
+        var group = new Group();
         group.Name = templateGroupName;
-        group.Uuid = Zabbix.Utilities.NewUuid();
+        group.Uuid = Utilities.NewUuid();
 
-        var groupNameOnly = new Zabbix.Group();
+        var groupNameOnly = new Group();
         groupNameOnly.Name = templateGroupName;
 
-        var template = new Zabbix.Template();
+        var template = new Template();
         template.Name = templateName;
         template.TemplateName = templateName;
         template.Groups.Add(groupNameOnly);
 
-        this.Export = new Zabbix.Export();
+        this.Export = new Export();
         this.Export.Groups.Add(group);
         this.Export.Templates.Add(template);
     }
@@ -90,7 +78,7 @@ public class Visitor : IVisitor
         computer.Close();
 
         // Add the master item
-        var masterItem = new Zabbix.Item();
+        var masterItem = new Item();
 
         masterItem.Key = $"{this.Prefix}.gather";
         masterItem.Name = "LibreHardwareMonitor";
@@ -108,7 +96,7 @@ public class Visitor : IVisitor
         {
             if (this.SensorTypes.Contains(sensor.SensorType))
             {
-                var item = new Zabbix.Item();
+                var item = new Item();
 
                 item.Key = Utilities.ItemKey(this.Prefix, hardware.Name, sensor.Name);
                 item.Name = Utilities.ItemName(hardware.Name, sensor.Name);

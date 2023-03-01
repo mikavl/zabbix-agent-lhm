@@ -3,6 +3,23 @@ using System.Text.RegularExpressions;
 
 namespace ZabbixAgentLHM;
 
+//
+// Represent the computer-related bools from:
+// https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/Computer.cs
+// The existing enums don't really seem to correspond to those, so use this.
+//
+public enum ComputerHardwareType {
+    Battery,
+    Controller,
+    Cpu,
+    Gpu,
+    Memory,
+    Motherboard,
+    Network,
+    Psu,
+    Storage
+};
+
 public static class Utilities
 {
     public const string DefaultPrefix = "lhm";
@@ -28,9 +45,9 @@ public static class Utilities
         return sensorTypes;
     }
 
-    public static Zabbix.Preprocessor NewDefaultPreprocessor(string key)
+    public static Preprocessor NewDefaultPreprocessor(string key)
     {
-        var preProcessor = new Zabbix.Preprocessor();
+        var preProcessor = new Preprocessor();
         preProcessor.Parameters.Add($"return JSON.parse(value)['{key}'];");
         return preProcessor;
     }
@@ -106,14 +123,21 @@ public static class Utilities
         }
     }
 
+    //
+    // Format a Zabbix key from the sensor name
+    //
     public static string ItemKey(string prefix, string hwName, string sensorName)
     {
+        // Used to remove all special characters from the names
         var special = new Regex("[^a-zA-Z0-9]");
+        // Used to remove consecutive underscores from the names (single underscores are fine)
         var underscores = new Regex("_+");
 
+        // Replace special characters with underscores
         var lowerHwKey = special.Replace(hwName, "_").ToLower();
         var lowerSensorKey = special.Replace(sensorName, "_").ToLower();
 
+        // Replace consecutive underscores with a single underscore
         var hwKey = underscores.Replace(lowerHwKey, "_").Trim('_');
         var sensorKey = underscores.Replace(lowerSensorKey, "_").Trim('_');
 
@@ -123,5 +147,22 @@ public static class Utilities
     public static string ItemName(string hwName, string sensorName)
     {
         return $"{hwName}: {sensorName}";
+    }
+
+    //
+    // Time format for Zabbix template
+    //
+    public static string DateTimeUtcNow()
+    {
+        return $"{DateTime.UtcNow.ToString("s")}Z";
+    }
+
+    //
+    // UUID for Zabbix template
+    //
+    public static string NewUuid()
+    {
+        var uuid = Guid.NewGuid();
+        return uuid.ToString().Replace("-", "");
     }
 }
