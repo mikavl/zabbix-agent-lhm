@@ -51,16 +51,56 @@ public static class Utilities
         return hardwareTypes;
     }
 
+    //
+    // For a complete list of LHM sensors and their units, see:
+    // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/ISensor.cs
+    //
     public static string Units(SensorType sensorType)
     {
         switch (sensorType)
         {
-            case SensorType.Fan:
-                return "RPM";
+            case SensorType.Voltage:
+                return "V";
+            case SensorType.Current:
+                return "A";
             case SensorType.Power:
                 return "W";
+            case SensorType.Clock:
+                return "MHz";
             case SensorType.Temperature:
                 return "°C";
+            case SensorType.Load:
+                return "%";
+            case SensorType.Frequency:
+                return "Hz";
+            case SensorType.Fan:
+                return "RPM";
+            case SensorType.Flow:
+                return "L/h";
+            case SensorType.Control:
+                return "%";
+            case SensorType.Level:
+                return "%";
+            case SensorType.Factor:
+                // Maybe use "x" for factor, if this works like "2.2 x"
+                return "x";
+            case SensorType.Data:
+                // 2^30 Bytes
+                return "GB";
+            case SensorType.SmallData:
+                // 2^20 Bytes
+                return "MB";
+            case SensorType.Throughput:
+                return "B/s";
+            case SensorType.TimeSpan:
+                // Seconds
+                return "s";
+            case SensorType.Energy:
+                // Milliwatt-hour
+                return "mWh";
+            // "Noise" is not in 0.9.1 yet
+            //case SensorType.Noise:
+            //    return "dBA";
             default:
                 throw new System.Exception($"No units specified for {sensorType.ToString()}");
         }

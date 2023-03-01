@@ -3,6 +3,18 @@ using YamlDotNet.Serialization;
 
 namespace ZabbixAgentLHM;
 
+public enum ComputerHardwareType {
+    Battery,
+    Controller,
+    Cpu,
+    Gpu,
+    Memory,
+    Motherboard,
+    Network,
+    Psu,
+    Storage
+};
+
 public class Visitor : IVisitor
 {
     [YamlMember(Alias = "zabbix_export")]
