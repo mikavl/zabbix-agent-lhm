@@ -8,6 +8,8 @@ namespace ZabbixAgentLHM;
 // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/Computer.cs
 // The existing enums don't really seem to correspond to those, so use this.
 //
+// Special value "All" for enabling everything.
+//
 public enum ComputerHardwareType {
     Battery,
     Controller,
@@ -34,10 +36,22 @@ public static class Utilities
         SensorType sensorTypeEnum;
         var sensorTypes = new List<SensorType>();
 
-        foreach (var sensorType in sensorTypesString.Split(",")) {
-            if (Enum.TryParse<SensorType>(sensorType, true, out sensorTypeEnum)) {
+        foreach (var sensorType in sensorTypesString.Split(","))
+        {
+            if (sensorType.ToLower().Equals("all"))
+            {
+                // Maybe list is not the most effective data type here, but whatever
+                foreach (SensorType t in Enum.GetValues(typeof(SensorType)))
+                {
+                    sensorTypes.Add(t);
+                }
+            }
+            else if (Enum.TryParse<SensorType>(sensorType, true, out sensorTypeEnum))
+            {
                 sensorTypes.Add(sensorTypeEnum);
-            } else {
+            }
+            else
+            {
                 throw new System.Exception($"Unknown sensor type {sensorType}");
             }
         }
@@ -54,13 +68,24 @@ public static class Utilities
 
     public static List<ZabbixAgentLHM.ComputerHardwareType> ParseHardwareTypes(string hardwareTypesString)
     {
-        ZabbixAgentLHM.ComputerHardwareType hardwareTypeEnum;
-        var hardwareTypes = new List<ZabbixAgentLHM.ComputerHardwareType>();
+        ComputerHardwareType hardwareTypeEnum;
+        var hardwareTypes = new List<ComputerHardwareType>();
 
         foreach (var hardwareType in hardwareTypesString.Split(",")) {
-            if (Enum.TryParse<ZabbixAgentLHM.ComputerHardwareType>(hardwareType, true, out hardwareTypeEnum)) {
+            if (hardwareType.ToLower().Equals("all"))
+            {
+                // Same comment as with the sensor types above
+                foreach (ComputerHardwareType t in Enum.GetValues(typeof(ComputerHardwareType)))
+                {
+                    hardwareTypes.Add(t);
+                }
+            }
+            else if (Enum.TryParse<ComputerHardwareType>(hardwareType, true, out hardwareTypeEnum))
+            {
                 hardwareTypes.Add(hardwareTypeEnum);
-            } else {
+            }
+            else
+            {
                 throw new System.Exception($"Unknown hardware type {hardwareType}");
             }
         }
@@ -170,22 +195,20 @@ public static class Utilities
     //
     // Format a Zabbix key from the sensor name
     //
-    public static string ItemKey(string prefix, string hwName, string sensorName)
+    public static string ItemKey(string prefix, Identifier identifier)
     {
-        // Used to remove all special characters from the names
-        var special = new Regex("[^a-zA-Z0-9]");
-        // Used to remove consecutive underscores from the names (single underscores are fine)
-        var underscores = new Regex("_+");
+        // Remove all special characters from the names. Allow slash as that's
+        // the separator. See:
+        // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/Identifier.cs
+        var special = new Regex("[^/a-zA-Z0-9]");
 
-        // Replace special characters with underscores
-        var lowerHwKey = special.Replace(hwName, "_").ToLower();
-        var lowerSensorKey = special.Replace(sensorName, "_").ToLower();
+        // Replace slashes and any underscores before or after them
+        var slashes = new Regex("_*/_*");
 
-        // Replace consecutive underscores with a single underscore
-        var hwKey = underscores.Replace(lowerHwKey, "_").Trim('_');
-        var sensorKey = underscores.Replace(lowerSensorKey, "_").Trim('_');
+        var identifierKey = special.Replace(identifier.ToString(), "_");
+        var identifierDots = slashes.Replace(identifierKey, ".");
 
-        return $"{prefix}.{hwKey}.{sensorKey}";
+        return $"{prefix}{identifierDots.ToLower()}";
     }
 
     public static string ItemName(string hwName, string sensorName)

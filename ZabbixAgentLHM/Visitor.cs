@@ -98,7 +98,7 @@ public class Visitor : IVisitor
             {
                 var item = new Item();
 
-                item.Key = Utilities.ItemKey(this.Prefix, hardware.Name, sensor.Name);
+                item.Key = Utilities.ItemKey(this.Prefix, sensor.Identifier);
                 item.Name = Utilities.ItemName(hardware.Name, sensor.Name);
                 item.Value = sensor.Value;
                 item.Units = Utilities.Units(sensor.SensorType);

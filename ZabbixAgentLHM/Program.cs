@@ -165,7 +165,13 @@ class Program
             }
         }
 
-        Console.WriteLine(JsonSerializer.Serialize(sensorDict));
+
+        var options = new JsonSerializerOptions
+        {
+            NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals
+        };
+
+        Console.WriteLine(JsonSerializer.Serialize(sensorDict, options));
     }
 
     static void Template(
