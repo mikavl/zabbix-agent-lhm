@@ -116,33 +116,33 @@ public class Program
     }
 
     private static Option<string> NewOptionWithAlias(
-        string Name,
-        string Alias,
-        string Description,
-        string? DefaultValue)
+        string name,
+        string alias,
+        string description,
+        string? defaultValue)
     {
         var option = new Option<string>(
-                        name: Name,
-                        description: Description);
+                        name: name,
+                        description: description);
 
-        option.AddAlias(Alias);
+        option.AddAlias(alias);
 
-        if (DefaultValue is string defaultValue)
+        if (defaultValue is string defaultValueNotNull)
         {
-                option.SetDefaultValue(defaultValue);
+                option.SetDefaultValue(defaultValueNotNull);
         }
 
         return option;
     }
 
     private static Command NewCommandWithOptions(
-        string Name,
-        string Description,
-        Option<string>[] Options)
+        string name,
+        string description,
+        Option<string>[] options)
     {
-        var command = new Command(Name, Description);
+        var command = new Command(name, description);
 
-        foreach (Option<string> option in Options)
+        foreach (Option<string> option in options)
         {
                 command.Add(option);
         }
@@ -217,4 +217,5 @@ public class Program
     }
 
 }
+
 
