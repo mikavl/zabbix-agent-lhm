@@ -16,4 +16,21 @@ public class Template
     public string? TemplateName { get; set; }
 
     public string? Uuid { get; set; } = Utilities.NewUuid();
+
+    public void SetGroup(
+        string groupName)
+    {
+        // Template groups should have no UUID, so don't set one here
+        var group = new Group(groupName);
+
+        this.Groups.Clear();
+        this.Groups.Add(group);
+    }
+
+    public void SetName(
+        string name)
+    {
+        this.Name = name;
+        this.TemplateName = name;
+    }
 }

@@ -156,8 +156,8 @@ public class Program
         var hardwareTypes = Utilities.ParseHardwareTypes(hardwareTypesString);
         var visitor = new Visitor(
             prefix,
-            hardwareTypes,
-            sensorTypes
+            hardwareTypes.ToArray(),
+            sensorTypes.ToArray()
         );
 
         visitor.Gather();
@@ -192,8 +192,8 @@ public class Program
         var hardwareTypes = Utilities.ParseHardwareTypes(hardwareTypesString);
         var visitor = new Visitor(
             prefix,
-            hardwareTypes,
-            sensorTypes,
+            hardwareTypes.ToArray(),
+            sensorTypes.ToArray(),
             templateName,
             templateGroupName
         );

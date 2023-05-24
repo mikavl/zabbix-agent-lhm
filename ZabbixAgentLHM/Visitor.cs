@@ -8,58 +8,42 @@ public class Visitor : IVisitor
     [YamlMember(Alias = "zabbix_export")]
     public Export Export { get; }
 
-    private IList<ComputerHardwareType> HardwareTypes;
+    private ComputerHardwareType[] _hardwareTypes;
 
-    private IList<Item> Items { get; } = new List<Item>();
+    private string _prefix { get; }
 
-    private string Prefix { get; }
-
-    private IList<SensorType> SensorTypes;
+    private SensorType[] _sensorTypes;
 
     public Visitor(
         string prefix,
-        IList<ComputerHardwareType> hardwareTypes,
-        IList<SensorType> sensorTypes)
+        ComputerHardwareType[] hardwareTypes,
+        SensorType[] sensorTypes)
     {
-        this.Prefix = prefix;
-        this.HardwareTypes = hardwareTypes;
-        this.SensorTypes = sensorTypes;
+        this._prefix = prefix;
+        this._hardwareTypes = hardwareTypes;
+        this._sensorTypes = sensorTypes;
 
         this.Export = new Export();
-        this.Export.Templates.Add(new Template());
     }
 
     public Visitor(
         string prefix,
-        IList<ComputerHardwareType> hardwareTypes,
-        IList<SensorType> sensorTypes,
+        ComputerHardwareType[] hardwareTypes,
+        SensorType[] sensorTypes,
         string templateName,
-        string templateGroupName)
+        string templateGroupName) : this(prefix, hardwareTypes, sensorTypes)
     {
-        this.Prefix = prefix;
-        this.HardwareTypes = hardwareTypes;
-        this.SensorTypes = sensorTypes;
-
-        var group = new Group();
-        group.Name = templateGroupName;
-        group.Uuid = Utilities.NewUuid();
-
-        var groupNameOnly = new Group();
-        groupNameOnly.Name = templateGroupName;
-
         var template = new Template();
-        template.Name = templateName;
-        template.TemplateName = templateName;
-        template.Groups.Add(groupNameOnly);
+        template.SetName(templateName);
+        template.SetGroup(templateGroupName);
 
-        this.Export = new Export();
-        this.Export.Groups.Add(group);
-        this.Export.Templates.Add(template);
+        this.Export.SetGroup(templateGroupName);
+        this.Export.SetTemplate(template);
     }
 
     public void Gather()
     {
-        var hwTypes = this.HardwareTypes;
+        var hwTypes = this._hardwareTypes;
         var computer = new Computer
         {
             IsBatteryEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Battery),
@@ -80,7 +64,7 @@ public class Visitor : IVisitor
         // Add the master item
         var masterItem = new Item();
 
-        masterItem.Key = $"{this.Prefix}.gather";
+        masterItem.Key = $"{this._prefix}.gather";
         masterItem.Name = "LibreHardwareMonitor";
         masterItem.History = 0;
         masterItem.Trends = 0;
@@ -94,11 +78,11 @@ public class Visitor : IVisitor
     {
         foreach (ISensor sensor in hardware.Sensors)
         {
-            if (this.SensorTypes.Contains(sensor.SensorType))
+            if (this._sensorTypes.Contains(sensor.SensorType))
             {
                 var item = new Item();
 
-                item.Key = Utilities.ItemKey(this.Prefix, sensor.Identifier);
+                item.Key = Utilities.ItemKey(this._prefix, sensor.Identifier);
                 item.Name = Utilities.ItemName(hardware.Name, sensor.Name);
                 item.Value = sensor.Value;
                 item.Units = Utilities.Units(sensor.SensorType);
