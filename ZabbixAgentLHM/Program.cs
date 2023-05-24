@@ -16,43 +16,43 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        Option<string> prefixOption = NewOptionWithAlias(
+        Option<string> prefixOption = NewStringOptionWithAlias(
             "--prefix",
             "-p",
             "Prefix to use for Zabbix keys",
             "lhm");
 
-        Option<string> sensorTypesOption = NewOptionWithAlias(
+        Option<string> sensorTypesOption = NewStringOptionWithAlias(
             "--sensor-types",
             "-s",
             "Comma separated list of sensor types to gather",
             "fan,power,temperature");
 
-        Option<string> hardwareTypesOption = NewOptionWithAlias(
+        Option<string> hardwareTypesOption = NewStringOptionWithAlias(
             "--hardware-types",
             "-t",
             "Comma separated list of hardware types to gather",
             "cpu,motherboard,storage");
 
-        Option<string> outputOption = NewOptionWithAlias(
+        Option<string> outputOption = NewStringOptionWithAlias(
             "--output",
             "-o",
             "Save Zabbix template to this file instead of stdout",
             null);
 
-        Option<string> templateGroupOption = NewOptionWithAlias(
+        Option<string> templateGroupOption = NewStringOptionWithAlias(
             "--template-group",
             "-g",
             "Name of the Zabbix template group",
             "Templates/LibreHardwareMonitor");
 
-        Option<string> templateNameOption = NewOptionWithAlias(
+        Option<string> templateNameOption = NewStringOptionWithAlias(
             "--template-name",
             "-n",
             "Name of the Zabbix template",
             "Template App LibreHardwareMonitor");
 
-        var gatherCommand = NewCommandWithOptions(
+        Command gatherCommand = NewCommandWithStringOptions(
             "gather",
             "Gather sensor data",
             new Option<string>[] {
@@ -61,7 +61,7 @@ public class Program
                 hardwareTypesOption
             });
 
-        var templateCommand = NewCommandWithOptions(
+        Command templateCommand = NewCommandWithStringOptions(
             "template",
             "Write Zabbix template",
             new Option<string>[] {
@@ -106,7 +106,7 @@ public class Program
             templateNameOption
         );
 
-        var rootCommand = new RootCommand(
+        RootCommand rootCommand = new RootCommand(
             "Zabbix agent integration with LibreHardwareMonitor");
 
         rootCommand.AddCommand(gatherCommand);
@@ -115,27 +115,27 @@ public class Program
         await rootCommand.InvokeAsync(args);
     }
 
-    private static Option<string> NewOptionWithAlias(
+    public static Option<string> NewStringOptionWithAlias(
         string name,
         string alias,
         string description,
         string? defaultValue)
     {
         var option = new Option<string>(
-                        name: name,
-                        description: description);
+            name: name,
+            description: description);
 
         option.AddAlias(alias);
 
         if (defaultValue is string defaultValueNotNull)
         {
-                option.SetDefaultValue(defaultValueNotNull);
+            option.SetDefaultValue(defaultValueNotNull);
         }
 
         return option;
     }
 
-    private static Command NewCommandWithOptions(
+    public static Command NewCommandWithStringOptions(
         string name,
         string description,
         Option<string>[] options)
@@ -144,20 +144,58 @@ public class Program
 
         foreach (Option<string> option in options)
         {
-                command.Add(option);
+            command.Add(option);
         }
 
         return command;
     }
 
+    public static SensorType[] SensorTypesFromString(string sensorTypesString)
+    {
+        return GenericTypesFromString<SensorType>(sensorTypesString);
+    }
+
+    public static ComputerHardwareType[] ComputerHardwareTypesFromString(string computerHardwareTypesString)
+    {
+        return GenericTypesFromString<ComputerHardwareType>(computerHardwareTypesString);
+    }
+
+    public static T[] GenericTypesFromString<T>(string typesString) where T : struct, System.Enum
+    {
+        T type;
+        var types = new List<T>();
+
+        foreach (var typeString in typesString.Split(","))
+        {
+            if (typeString.ToLower().Equals("all"))
+            {
+                foreach (T t in Enum.GetValues(typeof(T)))
+                {
+                    types.Add(t);
+                }
+            }
+            else if (Enum.TryParse<T>(typeString, true, out type))
+            {
+                types.Add(type);
+            }
+            else
+            {
+                throw new System.Exception($"Unknown type {typeString}");
+            }
+        }
+
+        return types.ToArray();
+    }
+
     static void Gather(string prefix, string hardwareTypesString, string sensorTypesString)
     {
-        var sensorTypes = Utilities.ParseSensorTypes(sensorTypesString);
-        var hardwareTypes = Utilities.ParseHardwareTypes(hardwareTypesString);
+        SensorType[] sensorTypes = SensorTypesFromString(sensorTypesString);
+        ComputerHardwareType[] computerHardwareTypes = ComputerHardwareTypesFromString(hardwareTypesString);
+
         var visitor = new Visitor(
             prefix,
-            hardwareTypes.ToArray(),
-            sensorTypes.ToArray()
+            computerHardwareTypes,
+            sensorTypes
         );
 
         visitor.Gather();
@@ -188,12 +226,12 @@ public class Program
         string templateGroupName,
         string templateName)
     {
-        var sensorTypes = Utilities.ParseSensorTypes(sensorTypesString);
-        var hardwareTypes = Utilities.ParseHardwareTypes(hardwareTypesString);
+        SensorType[] sensorTypes = SensorTypesFromString(sensorTypesString);
+        ComputerHardwareType[] computerHardwareTypes = ComputerHardwareTypesFromString(hardwareTypesString);
         var visitor = new Visitor(
             prefix,
-            hardwareTypes.ToArray(),
-            sensorTypes.ToArray(),
+            computerHardwareTypes,
+            sensorTypes,
             templateName,
             templateGroupName
         );

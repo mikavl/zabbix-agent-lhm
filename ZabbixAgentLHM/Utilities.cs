@@ -31,66 +31,11 @@ public static class Utilities
     public const string MasterItemValueType = "TEXT";
     public const string MasterItemType = "ZABBIX_ACTIVE";
 
-    public static List<SensorType> ParseSensorTypes(string sensorTypesString)
-    {
-        SensorType sensorTypeEnum;
-        var sensorTypes = new List<SensorType>();
-
-        foreach (var sensorType in sensorTypesString.Split(","))
-        {
-            if (sensorType.ToLower().Equals("all"))
-            {
-                // Maybe list is not the most effective data type here, but whatever
-                foreach (SensorType t in Enum.GetValues(typeof(SensorType)))
-                {
-                    sensorTypes.Add(t);
-                }
-            }
-            else if (Enum.TryParse<SensorType>(sensorType, true, out sensorTypeEnum))
-            {
-                sensorTypes.Add(sensorTypeEnum);
-            }
-            else
-            {
-                throw new System.Exception($"Unknown sensor type {sensorType}");
-            }
-        }
-
-        return sensorTypes;
-    }
-
     public static Preprocessor NewDefaultPreprocessor(string key)
     {
         var preProcessor = new Preprocessor();
         preProcessor.Parameters.Add($"return JSON.parse(value)['{key}'];");
         return preProcessor;
-    }
-
-    public static List<ZabbixAgentLHM.ComputerHardwareType> ParseHardwareTypes(string hardwareTypesString)
-    {
-        ComputerHardwareType hardwareTypeEnum;
-        var hardwareTypes = new List<ComputerHardwareType>();
-
-        foreach (var hardwareType in hardwareTypesString.Split(",")) {
-            if (hardwareType.ToLower().Equals("all"))
-            {
-                // Same comment as with the sensor types above
-                foreach (ComputerHardwareType t in Enum.GetValues(typeof(ComputerHardwareType)))
-                {
-                    hardwareTypes.Add(t);
-                }
-            }
-            else if (Enum.TryParse<ComputerHardwareType>(hardwareType, true, out hardwareTypeEnum))
-            {
-                hardwareTypes.Add(hardwareTypeEnum);
-            }
-            else
-            {
-                throw new System.Exception($"Unknown hardware type {hardwareType}");
-            }
-        }
-
-        return hardwareTypes;
     }
 
     //

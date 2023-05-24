@@ -6,8 +6,7 @@ public class Group
 
     public string? Uuid { get; set; }
 
-    public Group(
-        string name)
+    public Group(string name)
     {
         this.Name = name;
     }

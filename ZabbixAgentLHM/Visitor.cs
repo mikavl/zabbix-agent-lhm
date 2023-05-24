@@ -88,7 +88,7 @@ public class Visitor : IVisitor
                 item.Units = Utilities.Units(sensor.SensorType);
                 item.Delay = 0;
                 item.SetMasterItem("lhm.gather");
-                item.Preprocessing.Add(Utilities.NewDefaultPreprocessor(item.Key));
+                item.Preprocessors.Add(Utilities.NewDefaultPreprocessor(item.Key));
                 item.Tags.Add(new Tag("Component", Utilities.ComponentName(hardware.HardwareType)));
 
                 this.Export.GetTemplate().Items.Add(item);

@@ -27,7 +27,7 @@ public class Template
     public void SetGroupByName(
         string groupName)
     {
-        // Template groups should have no UUID, so don't set one here
+        // Template groups should not have an UUID, so don't set one here
         var group = new Group(groupName);
 
         this.Groups.Clear();
