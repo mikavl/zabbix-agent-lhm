@@ -7,21 +7,24 @@ public class Export
 {
     // Quote this to prevent "a character string is expected" error on import
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
-    public string Date { get; } = Utilities.DateTimeUtcNow();
+    public string Date { get; }
 
-    public IList<Group> Groups { get; } = new List<Group>();
+    public IList<Group> Groups { get; }
 
-    public IList<Template> Templates { get; } = new List<Template>();
+    public IList<Template> Templates { get; }
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
-    public string Version { get; } = "6.0";
+    public string Version { get; }
 
     public Export()
     {
-        this.Templates.Add(new Template());
+        this.Date = Utilities.DateTimeUtcNow();
+        this.Groups = new List<Group>();
+        this.Templates = new List<Template>();
+        this.Version = "6.0";
     }
 
-    public void SetGroup(
+    public void SetGroupByName(
         string groupName)
     {
         var group = new Group(groupName);
@@ -29,6 +32,20 @@ public class Export
 
         this.Groups.Clear();
         this.Groups.Add(group);
+    }
+
+    public Template GetTemplate()
+    {
+        try
+        {
+            return this.Templates.First();
+        }
+        catch (System.InvalidOperationException)
+        {
+            this.SetTemplate(new Template());
+        }
+
+        return this.Templates.First();
     }
 
     public void SetTemplate(

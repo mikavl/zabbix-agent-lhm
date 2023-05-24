@@ -35,9 +35,9 @@ public class Visitor : IVisitor
     {
         var template = new Template();
         template.SetName(templateName);
-        template.SetGroup(templateGroupName);
+        template.SetGroupByName(templateGroupName);
 
-        this.Export.SetGroup(templateGroupName);
+        this.Export.SetGroupByName(templateGroupName);
         this.Export.SetTemplate(template);
     }
 
@@ -71,7 +71,7 @@ public class Visitor : IVisitor
         masterItem.ValueType = "TEXT";
         masterItem.Type = "ZABBIX_ACTIVE";
 
-        this.Export.Templates.First().Items.Add(masterItem);
+        this.Export.GetTemplate().Items.Add(masterItem);
     }
 
     public void ProcessHardware(IHardware hardware)
@@ -91,7 +91,7 @@ public class Visitor : IVisitor
                 item.Preprocessing.Add(Utilities.NewDefaultPreprocessor(item.Key));
                 item.Tags.Add(new Tag("Component", Utilities.ComponentName(hardware.HardwareType)));
 
-                this.Export.Templates.First().Items.Add(item);
+                this.Export.GetTemplate().Items.Add(item);
             }
         }
     }

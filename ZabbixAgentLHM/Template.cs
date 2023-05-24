@@ -5,9 +5,11 @@ namespace ZabbixAgentLHM;
 
 public class Template
 {
-    public IList<Group> Groups { get; } = new List<Group>();
+    public IList<Group> Groups { get; }
 
-    public IList<Item> Items { get; set; } = new List<Item>();
+    public IList<Item> Items { get; set; }
+
+    public string Uuid { get; }
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public string? Name { get; set; }
@@ -15,9 +17,14 @@ public class Template
     [YamlMember(Alias = "template", ScalarStyle = ScalarStyle.SingleQuoted)]
     public string? TemplateName { get; set; }
 
-    public string? Uuid { get; set; } = Utilities.NewUuid();
+    public Template()
+    {
+        this.Groups = new List<Group>();
+        this.Items = new List<Item>();
+        this.Uuid = Utilities.NewUuid();
+    }
 
-    public void SetGroup(
+    public void SetGroupByName(
         string groupName)
     {
         // Template groups should have no UUID, so don't set one here
