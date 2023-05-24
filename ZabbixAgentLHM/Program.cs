@@ -7,130 +7,97 @@ using System.Linq;
 using System.CommandLine;
 using System.Security.Cryptography;
 
-
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace ZabbixAgentLHM;
 
-class Program
+public class Program
 {
-    static async Task Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        var rootCommand = AddCommands();
-        await rootCommand.InvokeAsync(args);
-    }
+        Option<string> prefixOption = NewOptionWithAlias(
+            "--prefix",
+            "-p",
+            "Prefix to use for Zabbix keys",
+            "lhm");
 
-    static RootCommand AddCommands()
-    {
-        //
-        // Command definitions
-        //
+        Option<string> sensorTypesOption = NewOptionWithAlias(
+            "--sensor-types",
+            "-s",
+            "Comma separated list of sensor types to gather",
+            "fan,power,temperature");
 
-        var rootCommand = new RootCommand("Zabbix agent integration with LibreHardwareMonitor");
-        var gatherCommand = new Command("gather", "Gather sensor data");
-        var templateCommand = new Command("template", "Write Zabbix template");
+        Option<string> hardwareTypesOption = NewOptionWithAlias(
+            "--hardware-types",
+            "-t",
+            "Comma separated list of hardware types to gather",
+            "cpu,motherboard,storage");
 
-        //
-        // Common command options
-        //
+        Option<string> outputOption = NewOptionWithAlias(
+            "--output",
+            "-o",
+            "Save Zabbix template to this file instead of stdout",
+            null);
 
-        var prefixOption = new Option<string>(
-            name: "--prefix",
-            description: "Prefix to use for Zabbix keys",
-            getDefaultValue: () => "lhm"
-        );
-        prefixOption.AddAlias("-p");
+        Option<string> templateGroupOption = NewOptionWithAlias(
+            "--template-group",
+            "-g",
+            "Name of the Zabbix template group",
+            "Templates/LibreHardwareMonitor");
 
-        var sensorTypesOption = new Option<string>(
-            name: "--sensor-types",
-            description: "Comma separated list of sensor types to gather",
-            getDefaultValue: () => "fan,power,temperature"
-        );
-        sensorTypesOption.AddAlias("-s");
+        Option<string> templateNameOption = NewOptionWithAlias(
+            "--template-name",
+            "-n",
+            "Name of the Zabbix template",
+            "Template App LibreHardwareMonitor");
 
-        var hardwareTypesOption = new Option<string>(
-            name: "--hardware-types",
-            description: "Comma separated list of hardware types to gather",
-            getDefaultValue: () => "cpu,motherboard,storage"
-        );
-        hardwareTypesOption.AddAlias("-t");
+        var gatherCommand = NewCommandWithOptions(
+            "gather",
+            "Gather sensor data",
+            new Option<string>[] {
+                prefixOption,
+                sensorTypesOption,
+                hardwareTypesOption
+            });
 
-        //
-        // Template command options
-        //
-
-        var outputOption = new Option<string>(
-            name: "--output",
-            description: "Save Zabbix template to this file instead of stdout"
-        );
-        outputOption.AddAlias("-o");
-
-        var templateGroupOption = new Option<string>(
-            name: "--template-group",
-            description: "Name of the Zabbix template group",
-            getDefaultValue: () => "Templates/LibreHardwareMonitor"
-        );
-        templateGroupOption.AddAlias("-g");
-
-        var templateNameOption = new Option<string>(
-            name: "--template-name",
-            description: "Name of the Zabbix template",
-            getDefaultValue: () => "Template App LibreHardwareMonitor"
-        );
-        templateNameOption.AddAlias("-n");
-
-        //
-        // Associate commands and options
-        //
-
-        templateCommand.Add(outputOption);
-        templateCommand.Add(prefixOption);
-        templateCommand.Add(sensorTypesOption);
-        templateCommand.Add(hardwareTypesOption);
-        templateCommand.Add(templateGroupOption);
-        templateCommand.Add(templateNameOption);
-
-        gatherCommand.Add(prefixOption);
-        gatherCommand.Add(sensorTypesOption);
-        gatherCommand.Add(hardwareTypesOption);
-
-        rootCommand.Add(gatherCommand);
-        rootCommand.Add(templateCommand);
-
-        //
-        // Command handlers
-        //
+        var templateCommand = NewCommandWithOptions(
+            "template",
+            "Write Zabbix template",
+            new Option<string>[] {
+                prefixOption,
+                sensorTypesOption,
+                hardwareTypesOption,
+                outputOption,
+                templateGroupOption,
+                templateNameOption
+            });
 
         gatherCommand.SetHandler((
+            prefixOptionValue,
+            hardwareTypesOptionValue,
+            sensorTypesOptionValue) => Gather(
                 prefixOptionValue,
                 hardwareTypesOptionValue,
-                sensorTypesOptionValue
-            ) => Gather(
-                prefixOptionValue,
-                hardwareTypesOptionValue,
-                sensorTypesOptionValue
-            ),
+                sensorTypesOptionValue),
             prefixOption,
             hardwareTypesOption,
             sensorTypesOption
         );
 
         templateCommand.SetHandler((
+            prefixOptionValue,
+            hardwareTypesOptionValue,
+            sensorTypesOptionValue,
+            outputOptionValue,
+            templateGroupOptionValue,
+            templateNameOptionValue) => Template(
                 prefixOptionValue,
                 hardwareTypesOptionValue,
                 sensorTypesOptionValue,
                 outputOptionValue,
                 templateGroupOptionValue,
-                templateNameOptionValue
-            ) => Template(
-                prefixOptionValue,
-                hardwareTypesOptionValue,
-                sensorTypesOptionValue,
-                outputOptionValue,
-                templateGroupOptionValue,
-                templateNameOptionValue
-            ),
+                templateNameOptionValue),
             prefixOption,
             hardwareTypesOption,
             sensorTypesOption,
@@ -139,9 +106,49 @@ class Program
             templateNameOption
         );
 
-        return rootCommand;
+        var rootCommand = new RootCommand(
+            "Zabbix agent integration with LibreHardwareMonitor");
+
+        rootCommand.AddCommand(gatherCommand);
+        rootCommand.AddCommand(templateCommand);
+
+        await rootCommand.InvokeAsync(args);
     }
 
+    private static Option<string> NewOptionWithAlias(
+        string Name,
+        string Alias,
+        string Description,
+        string? DefaultValue)
+    {
+        var option = new Option<string>(
+                        name: Name,
+                        description: Description);
+
+        option.AddAlias(Alias);
+
+        if (DefaultValue is string defaultValue)
+        {
+                option.SetDefaultValue(defaultValue);
+        }
+
+        return option;
+    }
+
+    private static Command NewCommandWithOptions(
+        string Name,
+        string Description,
+        Option<string>[] Options)
+    {
+        var command = new Command(Name, Description);
+
+        foreach (Option<string> option in Options)
+        {
+                command.Add(option);
+        }
+
+        return command;
+    }
 
     static void Gather(string prefix, string hardwareTypesString, string sensorTypesString)
     {
@@ -164,7 +171,6 @@ class Program
                 sensorDict.Add(item.Key, item.Value ?? 0);
             }
         }
-
 
         var options = new JsonSerializerOptions
         {
