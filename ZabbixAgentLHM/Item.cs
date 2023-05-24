@@ -51,8 +51,23 @@ public class Item
         this.ValueType = "FLOAT";
     }
 
-    public void SetMasterItem(string key)
+    public void SetMasterItem(Item item)
     {
-        this.MasterItem.Add("key", key);
+        if (item.Key is string key)
+        {
+            this.MasterItem.Clear();
+            this.MasterItem.Add("key", key);
+        }
+        else
+        {
+            throw new System.Exception("Master item candidate key was null, this should not happen");
+        }
+    }
+
+    public void AddDefaultPreprocessor()
+    {
+        var preprocessor = new Preprocessor();
+        preprocessor.Parameters.Add($"return JSON.parse(value)['{this.Key}'];");
+        this.Preprocessors.Add(preprocessor);
     }
 }

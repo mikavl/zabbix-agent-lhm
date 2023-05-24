@@ -8,7 +8,7 @@ public class Visitor : IVisitor
     [YamlMember(Alias = "zabbix_export")]
     public Export Export { get; }
 
-    private ComputerHardwareType[] _hardwareTypes;
+    private ComputerHardwareType[] _computerHardwareTypes;
 
     private string _prefix { get; }
 
@@ -16,11 +16,11 @@ public class Visitor : IVisitor
 
     public Visitor(
         string prefix,
-        ComputerHardwareType[] hardwareTypes,
+        ComputerHardwareType[] computerHardwareTypes,
         SensorType[] sensorTypes)
     {
         this._prefix = prefix;
-        this._hardwareTypes = hardwareTypes;
+        this._computerHardwareTypes = computerHardwareTypes;
         this._sensorTypes = sensorTypes;
 
         this.Export = new Export();
@@ -28,10 +28,10 @@ public class Visitor : IVisitor
 
     public Visitor(
         string prefix,
-        ComputerHardwareType[] hardwareTypes,
+        ComputerHardwareType[] computerHardwareTypes,
         SensorType[] sensorTypes,
         string templateName,
-        string templateGroupName) : this(prefix, hardwareTypes, sensorTypes)
+        string templateGroupName) : this(prefix, computerHardwareTypes, sensorTypes)
     {
         var template = new Template();
         template.SetName(templateName);
@@ -43,43 +43,35 @@ public class Visitor : IVisitor
 
     public void Gather()
     {
-        var hwTypes = this._hardwareTypes;
+        this.Export.GetTemplate().SetMasterItemByNameAndKey("LibreHardwareMonitor", $"{this._prefix}.gather");
+
         var computer = new Computer
         {
-            IsBatteryEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Battery),
-            IsControllerEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Controller),
-            IsCpuEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Cpu),
-            IsGpuEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Gpu),
-            IsMemoryEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Memory),
-            IsMotherboardEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Motherboard),
-            IsNetworkEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Network),
-            IsPsuEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Psu),
-            IsStorageEnabled = hwTypes.Contains(ZabbixAgentLHM.ComputerHardwareType.Storage),
+            IsBatteryEnabled     = this._computerHardwareTypes.Contains(ComputerHardwareType.Battery),
+            IsControllerEnabled  = this._computerHardwareTypes.Contains(ComputerHardwareType.Controller),
+            IsCpuEnabled         = this._computerHardwareTypes.Contains(ComputerHardwareType.Cpu),
+            IsGpuEnabled         = this._computerHardwareTypes.Contains(ComputerHardwareType.Gpu),
+            IsMemoryEnabled      = this._computerHardwareTypes.Contains(ComputerHardwareType.Memory),
+            IsMotherboardEnabled = this._computerHardwareTypes.Contains(ComputerHardwareType.Motherboard),
+            IsNetworkEnabled     = this._computerHardwareTypes.Contains(ComputerHardwareType.Network),
+            IsPsuEnabled         = this._computerHardwareTypes.Contains(ComputerHardwareType.Psu),
+            IsStorageEnabled     = this._computerHardwareTypes.Contains(ComputerHardwareType.Storage),
         };
 
         computer.Open();
         computer.Accept(this);
         computer.Close();
-
-        // Add the master item
-        var masterItem = new Item();
-
-        masterItem.Key = $"{this._prefix}.gather";
-        masterItem.Name = "LibreHardwareMonitor";
-        masterItem.History = 0;
-        masterItem.Trends = 0;
-        masterItem.ValueType = "TEXT";
-        masterItem.Type = "ZABBIX_ACTIVE";
-
-        this.Export.GetTemplate().Items.Add(masterItem);
     }
 
     public void ProcessHardware(IHardware hardware)
     {
+        Item? masterItem = this.Export.GetTemplate().MasterItem;
+
         foreach (ISensor sensor in hardware.Sensors)
         {
             if (this._sensorTypes.Contains(sensor.SensorType))
             {
+                var componentTag = new Tag("Component", Utilities.ComponentName(hardware.HardwareType));
                 var item = new Item();
 
                 item.Key = Utilities.ItemKey(this._prefix, sensor.Identifier);
@@ -87,11 +79,20 @@ public class Visitor : IVisitor
                 item.Value = sensor.Value;
                 item.Units = Utilities.Units(sensor.SensorType);
                 item.Delay = 0;
-                item.SetMasterItem("lhm.gather");
-                item.Preprocessors.Add(Utilities.NewDefaultPreprocessor(item.Key));
-                item.Tags.Add(new Tag("Component", Utilities.ComponentName(hardware.HardwareType)));
+                item.AddDefaultPreprocessor();
 
-                this.Export.GetTemplate().Items.Add(item);
+                item.Tags.Add(componentTag);
+
+                if (masterItem is Item m)
+                {
+                    item.SetMasterItem(m);
+                }
+                else
+                {
+                    throw new System.Exception("Master item was null, this should not happen");
+                }
+
+                this.Export.GetTemplate().AddItem(item);
             }
         }
     }
