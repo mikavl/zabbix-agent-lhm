@@ -27,8 +27,7 @@ public class Template
         this.Uuid = Utilities.NewUuid();
     }
 
-    public void SetGroupByName(
-        string groupName)
+    public void SetGroupByName(string groupName)
     {
         // Template groups should not have an UUID, so don't set one here
         var group = new Group(groupName);
@@ -37,8 +36,7 @@ public class Template
         this.Groups.Add(group);
     }
 
-    public void SetName(
-        string name)
+    public void SetName(string name)
     {
         this.Name = name;
         this.TemplateName = name;

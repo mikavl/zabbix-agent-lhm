@@ -71,17 +71,15 @@ public class Visitor : IVisitor
         {
             if (this._sensorTypes.Contains(sensor.SensorType))
             {
-                var componentTag = new Tag("Component", Utilities.ComponentName(hardware.HardwareType));
                 var item = new Item();
 
-                item.Key = Utilities.ItemKey(this._prefix, sensor.Identifier);
-                item.Name = Utilities.ItemName(hardware.Name, sensor.Name);
+                item.SetKey(this._prefix, sensor.Identifier);
+                item.SetName(hardware.Name, sensor.Name);
                 item.Value = sensor.Value;
-                item.Units = Utilities.Units(sensor.SensorType);
+                item.SetUnits(sensor.SensorType);
                 item.Delay = 0;
-                item.AddDefaultPreprocessor();
-
-                item.Tags.Add(componentTag);
+                item.AddPreprocessor(new DefaultPreprocessor(item.Key)); // TODO: fix nullable item.Key
+                item.AddTag(new ComponentTag(hardware.HardwareType));
 
                 if (masterItem is Item m)
                 {

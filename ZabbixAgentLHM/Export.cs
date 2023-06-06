@@ -18,7 +18,7 @@ namespace ZabbixAgentLHM
 
         public Export()
         {
-            this.Date = Utilities.DateTimeUtcNow();
+            this.Date = $"{DateTime.UtcNow.ToString("s")}Z";
             this.Groups = new List<Group>();
             this.Templates = new List<Template>();
 
