@@ -4,8 +4,6 @@ namespace ZabbixAgentLHM
     {
         public List<string> Parameters { get; }
 
-        public string Type { get; set; }
-
-        public void AddParameter(string parameter);
+        public string Type { get; }
     }
 }
