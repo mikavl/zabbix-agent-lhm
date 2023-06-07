@@ -1,25 +1,16 @@
 using LibreHardwareMonitor.Hardware;
-using YamlDotNet.Core;
-using YamlDotNet.Serialization;
 
 namespace ZabbixAgentLHM
 {
     public class ComponentTag : ITag
     {
-        [YamlMember(Alias = "tag")]
-        public string? Name { get; set; }
+        public string Tag { get; set; } = "Component";
 
-        public string? Value { get; set; }
+        public string Value { get; set; }
 
         public ComponentTag(HardwareType hardwareType)
         {
-            this.Name = "Component";
-            this.SetValue(hardwareType);
-        }
-
-        // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/HardwareType.cs
-        public void SetValue(HardwareType hardwareType)
-        {
+            // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/HardwareType.cs
             switch (hardwareType)
             {
                 case HardwareType.Motherboard:
