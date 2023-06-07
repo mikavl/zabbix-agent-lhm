@@ -121,10 +121,9 @@ public class Item : IItem
                 // Milliwatt-hour
                 this.Units = "mWh";
                 break;
-            // "Noise" is not in 0.9.1 yet
-            //case SensorType.Noise:
-            //  this.Units = "dBA";
-            //  break;
+            case SensorType.Noise:
+                this.Units = "dBA";
+                break;
             default:
                 throw new System.Exception($"No units specified for {sensor.SensorType.ToString()}");
         }
