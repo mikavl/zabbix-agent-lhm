@@ -4,9 +4,9 @@ namespace ZabbixAgentLHM
 {
     public class ComponentTag : ITag
     {
-        public string Tag { get; set; } = "Component";
+        public string Tag { get; } = "Component";
 
-        public string Value { get; set; }
+        public string Value { get; }
 
         public ComponentTag(HardwareType hardwareType)
         {

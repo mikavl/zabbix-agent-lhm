@@ -9,7 +9,7 @@ namespace ZabbixAgentLHM
         [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
         public string Date { get; }
 
-        public IList<Group> Groups { get; }
+        public IList<IGroup> Groups { get; }
 
         public IList<Template> Templates { get; }
 
@@ -19,7 +19,7 @@ namespace ZabbixAgentLHM
         public Export()
         {
             this.Date = $"{DateTime.UtcNow.ToString("s")}Z";
-            this.Groups = new List<Group>();
+            this.Groups = new List<IGroup>();
             this.Templates = new List<Template>();
 
             // Template version for Zabbix 6.0 LTS
@@ -29,8 +29,7 @@ namespace ZabbixAgentLHM
         public void SetGroupByName(
             string groupName)
         {
-            var group = new Group(groupName);
-            group.Uuid = Utilities.NewUuid();
+            var group = new ExportGroup(groupName);
 
             this.Groups.Clear();
             this.Groups.Add(group);

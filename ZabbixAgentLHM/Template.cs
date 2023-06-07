@@ -5,7 +5,7 @@ namespace ZabbixAgentLHM;
 
 public class Template
 {
-    public IList<Group> Groups { get; }
+    public IList<IGroup> Groups { get; }
 
     public IList<Item> Items { get; set; }
 
@@ -22,7 +22,7 @@ public class Template
 
     public Template()
     {
-        this.Groups = new List<Group>();
+        this.Groups = new List<IGroup>();
         this.Items = new List<Item>();
         this.Uuid = Utilities.NewUuid();
     }
@@ -30,7 +30,7 @@ public class Template
     public void SetGroupByName(string groupName)
     {
         // Template groups should not have an UUID, so don't set one here
-        var group = new Group(groupName);
+        var group = new TemplateGroup(groupName);
 
         this.Groups.Clear();
         this.Groups.Add(group);
