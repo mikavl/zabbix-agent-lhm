@@ -1,3 +1,6 @@
+using YamlDotNet.Core;
+using YamlDotNet.Serialization;
+
 namespace ZabbixAgentLHM
 {
     public class MasterItem : IItem
@@ -12,10 +15,13 @@ namespace ZabbixAgentLHM
 
         public string ValueType { get; } = "TEXT";
 
-        public int? Delay { get; } = 0;
+        [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
+        public int? Delay { get; } = 60;
 
+        [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
         public int? History { get; } = 0;
 
+        [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
         public int? Trends { get; } = 0;
 
         public string? Units { get; } = null;
