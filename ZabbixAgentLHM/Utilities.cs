@@ -24,13 +24,6 @@ public enum ComputerHardwareType {
 
 public static class Utilities
 {
-    public const string DefaultPrefix = "lhm";
-
-    public const string MasterItemName = "LibreHardwareMonitor";
-    public const string MasterItemSubkey = "gather";
-    public const string MasterItemValueType = "TEXT";
-    public const string MasterItemType = "ZABBIX_ACTIVE";
-
     //
     // UUID for Zabbix template
     //

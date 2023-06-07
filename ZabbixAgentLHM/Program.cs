@@ -14,6 +14,12 @@ namespace ZabbixAgentLHM;
 
 public class Program
 {
+    public const string DefaultTemplateName = "Template App LibreHardwareMonitor";
+
+    public const string DefaultTemplateGroupName = "Templates/LibreHardwareMonitor";
+
+
+
     public static async Task Main(string[] args)
     {
         Option<string> prefixOption = NewStringOptionWithAlias(
@@ -44,13 +50,13 @@ public class Program
             "--template-group",
             "-g",
             "Name of the Zabbix template group",
-            "Templates/LibreHardwareMonitor");
+            DefaultTemplateGroupName);
 
         Option<string> templateNameOption = NewStringOptionWithAlias(
             "--template-name",
             "-n",
             "Name of the Zabbix template",
-            "Template App LibreHardwareMonitor");
+            DefaultTemplateName);
 
         Command gatherCommand = NewCommandWithStringOptions(
             "gather",
@@ -195,7 +201,10 @@ public class Program
         var visitor = new Visitor(
             prefix,
             computerHardwareTypes,
-            sensorTypes
+            sensorTypes,
+            // The following are not really used in the gather command, so pass defaults
+            DefaultTemplateName,
+            DefaultTemplateGroupName
         );
 
         visitor.Gather();

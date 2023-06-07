@@ -7,50 +7,33 @@ namespace ZabbixAgentLHM
     {
         // Quote this to prevent "a character string is expected" error on import
         [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
-        public string Date { get; }
+        public string Date { get; } = $"{DateTime.UtcNow.ToString("s")}Z";
 
-        public IList<IGroup> Groups { get; }
+        public IList<IGroup> Groups { get; } = new List<IGroup>();
 
-        public IList<Template> Templates { get; }
+        public IList<Template> Templates { get; } = new List<Template>();
 
         [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
-        public string Version { get; }
+        public string Version { get; } = "6.0";
 
-        public Export()
+        public void AddItem(IItem item)
         {
-            this.Date = $"{DateTime.UtcNow.ToString("s")}Z";
-            this.Groups = new List<IGroup>();
-            this.Templates = new List<Template>();
-
-            // Template version for Zabbix 6.0 LTS
-            this.Version = "6.0";
+            this.GetTemplate().AddItem(item);
         }
 
-        public void SetGroupByName(
-            string groupName)
+        public void SetGroup(IGroup group)
         {
-            var group = new ExportGroup(groupName);
-
             this.Groups.Clear();
             this.Groups.Add(group);
         }
 
         public Template GetTemplate()
         {
-            try
-            {
-                return this.Templates.First();
-            }
-            catch (System.InvalidOperationException)
-            {
-                this.SetTemplate(new Template());
-            }
-
+            // Will throw if the list is empty, but it won't be *knocks wood*
             return this.Templates.First();
         }
 
-        public void SetTemplate(
-            Template template)
+        public void SetTemplate(Template template)
         {
             this.Templates.Clear();
             this.Templates.Add(template);

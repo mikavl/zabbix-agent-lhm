@@ -14,37 +14,36 @@ public class Visitor : IVisitor
 
     private SensorType[] _sensorTypes;
 
-    public Visitor(
-        string prefix,
-        ComputerHardwareType[] computerHardwareTypes,
-        SensorType[] sensorTypes)
-    {
-        this._prefix = prefix;
-        this._computerHardwareTypes = computerHardwareTypes;
-        this._sensorTypes = sensorTypes;
-
-        this.Export = new Export();
-    }
+    private IItem _masterItem = new MasterItem();
 
     public Visitor(
         string prefix,
         ComputerHardwareType[] computerHardwareTypes,
         SensorType[] sensorTypes,
         string templateName,
-        string templateGroupName) : this(prefix, computerHardwareTypes, sensorTypes)
+        string templateGroupName)
     {
-        var template = new Template();
-        template.SetName(templateName);
-        template.SetGroupByName(templateGroupName);
+        this._prefix = prefix;
+        this._computerHardwareTypes = computerHardwareTypes;
+        this._sensorTypes = sensorTypes;
 
-        this.Export.SetGroupByName(templateGroupName);
+        this.Export = new Export();
+
+        var template = new Template(templateName);
+        template.SetGroup(new TemplateGroup(templateGroupName));
+
+        this.Export.SetGroup(new ExportGroup(templateGroupName));
         this.Export.SetTemplate(template);
+        this.AddItem(this._masterItem);
+    }
+
+    public void AddItem(IItem item)
+    {
+        this.Export.AddItem(item);
     }
 
     public void Gather()
     {
-        this.Export.GetTemplate().SetMasterItemByNameAndKey("LibreHardwareMonitor", $"{this._prefix}.gather");
-
         var computer = new Computer
         {
             IsBatteryEnabled     = this._computerHardwareTypes.Contains(ComputerHardwareType.Battery),
@@ -65,32 +64,13 @@ public class Visitor : IVisitor
 
     public void ProcessHardware(IHardware hardware)
     {
-        Item? masterItem = this.Export.GetTemplate().MasterItem;
-
         foreach (ISensor sensor in hardware.Sensors)
         {
             if (this._sensorTypes.Contains(sensor.SensorType))
             {
-                var item = new Item();
-
-                item.SetKey(this._prefix, sensor.Identifier);
-                item.SetName(hardware.Name, sensor.Name);
-                item.Value = sensor.Value;
-                item.SetUnits(sensor.SensorType);
-                item.Delay = 0;
-                item.AddPreprocessor(new DefaultPreprocessor(item.Key)); // TODO: fix nullable item.Key
-                item.AddTag(new ComponentTag(hardware.HardwareType));
-
-                if (masterItem is Item m)
-                {
-                    item.SetMasterItem(m);
-                }
-                else
-                {
-                    throw new System.Exception("Master item was null, this should not happen");
-                }
-
-                this.Export.GetTemplate().AddItem(item);
+                var item = new Item(hardware, sensor);
+                item.SetMasterItem(this._masterItem);
+                this.AddItem(item);
             }
         }
     }

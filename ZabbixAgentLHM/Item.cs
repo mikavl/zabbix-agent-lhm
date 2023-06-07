@@ -5,60 +5,53 @@ using YamlDotNet.Serialization;
 
 namespace ZabbixAgentLHM;
 
-public class Item
+public class Item : IItem
 {
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
-    public int? Delay { get; set; }
+    public int? Delay { get; } = 0;
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
-    public int? History { get; set; }
+    public int? History { get; } = null;
 
-    public string? Key { get; set; }
+    public string Key { get; set; } = ""; // TODO
 
-    public IDictionary<string, string> MasterItem { get; }
+    public IDictionary<string, string> MasterItem { get; } = new Dictionary<string, string>();
 
-    public string? Name { get; set; }
+    public string Name { get; set; } = ""; // TODO
 
-    [YamlMember(Alias = "preprocessing")]
-    public IList<IPreprocessor> Preprocessors { get; }
+    public IList<IPreprocessor> Preprocessing { get; } = new List<IPreprocessor>();
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public int? Trends { get; set; }
 
-    public string Type { get; set; }
+    // All items depend on the single master item
+    public string Type { get; set; } = "DEPENDENT";
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public string? Units { get; set; }
 
-    public string Uuid { get; }
+    public string Uuid { get; } = Utilities.NewUuid();
 
     [YamlIgnore]
     public float? Value { get; set; }
 
-    public string? ValueType { get; set; }
+    // The values are all floats except for the master item
+    public string ValueType { get; set; } = "FLOAT";
 
-    public IList<ITag> Tags { get; }
+    public IList<ITag> Tags { get; } = new List<ITag>();
 
-    public Item()
+    public Item(IHardware hardware, ISensor sensor)
     {
-        this.MasterItem = new Dictionary<string, string>();
-        this.Preprocessors = new List<IPreprocessor>();
-        this.Uuid = Utilities.NewUuid();
-        this.Tags = new List<ITag>();
+        this.Name = $"{hardware.Name}: {sensor.Name}";
+        this.Value = sensor.Value;
 
-        // All items depend on the single master item
-        this.Type = "DEPENDENT";
-
-        // The values are all floats except for the master item
-        this.ValueType = "FLOAT";
+        this.SetKey(sensor.Identifier);
+        this.SetUnits(sensor.SensorType);
+        this.AddPreprocessor(new DefaultPreprocessor(this.Key));
+        this.AddTag(new ComponentTag(hardware.HardwareType));
     }
 
-    public void SetName(string hardwareName, string sensorName)
-    {
-        this.Name = $"{hardwareName}: {sensorName}";
-    }
-
-    public void SetKey(string prefix, Identifier identifier)
+    public void SetKey(Identifier identifier)
     {
         // Remove all special characters from the names. Allow slash as that's
         // the separator. See:
@@ -71,20 +64,13 @@ public class Item
         var identifierKey = special.Replace(identifier.ToString(), "_");
         var identifierDots = slashes.Replace(identifierKey, ".");
 
-        this.Key = $"{prefix}{identifierDots.ToLower()}";
+        this.Key = $"lhm{identifierDots.ToLower()}";
     }
 
-    public void SetMasterItem(Item item)
+    public void SetMasterItem(IItem item)
     {
-        if (item.Key is string key)
-        {
-            this.MasterItem.Clear();
-            this.MasterItem.Add("key", key);
-        }
-        else
-        {
-            throw new System.Exception("Master item candidate key was null, this should not happen");
-        }
+        this.MasterItem.Clear();
+        this.MasterItem.Add("key", item.Key);
     }
 
     public void AddTag(ITag tag)
@@ -94,7 +80,7 @@ public class Item
 
     public void AddPreprocessor(IPreprocessor preprocessor)
     {
-        this.Preprocessors.Add(preprocessor);
+        this.Preprocessing.Add(preprocessor);
     }
 
     // For a complete list of LHM sensors and their units, see:

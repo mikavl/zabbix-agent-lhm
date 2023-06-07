@@ -7,7 +7,7 @@ public class Template
 {
     public IList<IGroup> Groups { get; }
 
-    public IList<Item> Items { get; set; }
+    public IList<IItem> Items { get; set; }
 
     public string Uuid { get; }
 
@@ -17,53 +17,22 @@ public class Template
     [YamlMember(Alias = "template", ScalarStyle = ScalarStyle.SingleQuoted)]
     public string? TemplateName { get; set; }
 
-    [YamlIgnore]
-    public Item? MasterItem { get; set; }
-
-    public Template()
+    public Template(string name)
     {
         this.Groups = new List<IGroup>();
-        this.Items = new List<Item>();
+        this.Items = new List<IItem>();
+        this.Name = name;
+        this.TemplateName = name;
         this.Uuid = Utilities.NewUuid();
     }
 
-    public void SetGroupByName(string groupName)
+    public void SetGroup(IGroup group)
     {
-        // Template groups should not have an UUID, so don't set one here
-        var group = new TemplateGroup(groupName);
-
         this.Groups.Clear();
         this.Groups.Add(group);
     }
 
-    public void SetName(string name)
-    {
-        this.Name = name;
-        this.TemplateName = name;
-    }
-
-    public void SetMasterItemByNameAndKey(string name, string key)
-    {
-        var item = new Item();
-        item.Name = name;
-        item.Key = key;
-
-        // Don't keep history or trends, as they are all in the dependent items
-        item.History = 0;
-        item.Trends = 0;
-        item.ValueType = "TEXT";
-        item.Type = "ZABBIX_ACTIVE";
-
-        if (this.MasterItem is Item masterItem)
-        {
-            this.Items.Remove(masterItem);
-        }
-
-        this.MasterItem = item;
-        this.AddItem(item);
-    }
-
-    public void AddItem(Item item)
+    public void AddItem(IItem item)
     {
         this.Items.Add(item);
     }
