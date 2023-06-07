@@ -4,7 +4,7 @@ namespace ZabbixAgentLHM
     {
         public string Name { get; }
 
-        public string? Uuid { get; } = Utilities.NewUuid();
+        public string? Uuid { get; } = Guid.NewGuid().ToString().Replace("-", "");
 
         public ExportGroup(string name)
         {

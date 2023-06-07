@@ -13,11 +13,11 @@ public class Item : IItem
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public int? History { get; } = null;
 
-    public string Key { get; set; } = ""; // TODO
+    public string Key { get; set; }
 
     public IDictionary<string, string> MasterItem { get; } = new Dictionary<string, string>();
 
-    public string Name { get; set; } = ""; // TODO
+    public string Name { get; set; }
 
     public IList<IPreprocessor> Preprocessing { get; } = new List<IPreprocessor>();
 
@@ -30,7 +30,7 @@ public class Item : IItem
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public string? Units { get; set; }
 
-    public string Uuid { get; } = Utilities.NewUuid();
+    public string Uuid { get; } = Guid.NewGuid().ToString().Replace("-", "");
 
     [YamlIgnore]
     public float? Value { get; set; }
@@ -45,14 +45,6 @@ public class Item : IItem
         this.Name = $"{hardware.Name}: {sensor.Name}";
         this.Value = sensor.Value;
 
-        this.SetKey(sensor.Identifier);
-        this.SetUnits(sensor.SensorType);
-        this.AddPreprocessor(new DefaultPreprocessor(this.Key));
-        this.AddTag(new ComponentTag(hardware.HardwareType));
-    }
-
-    public void SetKey(Identifier identifier)
-    {
         // Remove all special characters from the names. Allow slash as that's
         // the separator. See:
         // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/Identifier.cs
@@ -61,33 +53,17 @@ public class Item : IItem
         // Replace slashes and any underscores before or after them
         var slashes = new Regex("_*/_*");
 
-        var identifierKey = special.Replace(identifier.ToString(), "_");
+        var identifierKey = special.Replace(sensor.Identifier.ToString(), "_");
         var identifierDots = slashes.Replace(identifierKey, ".");
 
         this.Key = $"lhm{identifierDots.ToLower()}";
-    }
 
-    public void SetMasterItem(IItem item)
-    {
-        this.MasterItem.Clear();
-        this.MasterItem.Add("key", item.Key);
-    }
+        this.AddPreprocessor(new DefaultPreprocessor(this.Key));
+        this.AddTag(new ComponentTag(hardware.HardwareType));
 
-    public void AddTag(ITag tag)
-    {
-        this.Tags.Add(tag);
-    }
-
-    public void AddPreprocessor(IPreprocessor preprocessor)
-    {
-        this.Preprocessing.Add(preprocessor);
-    }
-
-    // For a complete list of LHM sensors and their units, see:
-    // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/ISensor.cs
-    public void SetUnits(SensorType sensorType)
-    {
-        switch (sensorType)
+        // For a complete list of LHM sensors and their units, see:
+        // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/ISensor.cs
+        switch (sensor.SensorType)
         {
             case SensorType.Voltage:
                 this.Units = "V";
@@ -150,7 +126,24 @@ public class Item : IItem
             //  this.Units = "dBA";
             //  break;
             default:
-                throw new System.Exception($"No units specified for {sensorType.ToString()}");
+                throw new System.Exception($"No units specified for {sensor.SensorType.ToString()}");
         }
     }
+
+    public void SetMasterItem(IItem item)
+    {
+        this.MasterItem.Clear();
+        this.MasterItem.Add("key", item.Key);
+    }
+
+    public void AddTag(ITag tag)
+    {
+        this.Tags.Add(tag);
+    }
+
+    public void AddPreprocessor(IPreprocessor preprocessor)
+    {
+        this.Preprocessing.Add(preprocessor);
+    }
+
 }

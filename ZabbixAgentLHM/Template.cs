@@ -5,25 +5,22 @@ namespace ZabbixAgentLHM;
 
 public class Template
 {
-    public IList<IGroup> Groups { get; }
+    public IList<IGroup> Groups { get; } = new List<IGroup>();
 
-    public IList<IItem> Items { get; set; }
+    public IList<IItem> Items { get; } = new List<IItem>();
 
-    public string Uuid { get; }
+    public string Uuid { get; } = Guid.NewGuid().ToString().Replace("-", "");
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
-    public string? Name { get; set; }
+    public string Name { get; }
 
     [YamlMember(Alias = "template", ScalarStyle = ScalarStyle.SingleQuoted)]
-    public string? TemplateName { get; set; }
+    public string TemplateName { get; }
 
     public Template(string name)
     {
-        this.Groups = new List<IGroup>();
-        this.Items = new List<IItem>();
         this.Name = name;
         this.TemplateName = name;
-        this.Uuid = Utilities.NewUuid();
     }
 
     public void SetGroup(IGroup group)

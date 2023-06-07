@@ -8,7 +8,7 @@ namespace ZabbixAgentLHM
 
         public string Type { get; } = "ZABBIX_ACTIVE";
 
-        public string Uuid { get; } = Utilities.NewUuid();
+        public string Uuid { get; } = Guid.NewGuid().ToString().Replace("-", "");
 
         public string ValueType { get; } = "TEXT";
 
