@@ -196,11 +196,7 @@ namespace ZabbixAgentLHM
             SensorType[] sensorTypes = TypesFromString<SensorType>(sensorTypesString);
             ComputerHardware[] hardwareTypes = TypesFromString<ComputerHardware>(hardwareTypesString);
 
-            var data = new Data(
-                hardwareTypes,
-                sensorTypes,
-                templateName,
-                groupName);
+            var data = new Data(hardwareTypes, sensorTypes);
 
             data.Gather();
 

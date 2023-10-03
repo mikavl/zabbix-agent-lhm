@@ -19,7 +19,7 @@ public class Item : IItem
 
     public string Name { get; set; }
 
-    public IList<IPreprocessor> Preprocessing { get; } = new List<IPreprocessor>();
+    public IList<Zabbix.IPreprocessor> Preprocessing { get; } = new List<Zabbix.IPreprocessor>();
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public int? Trends { get; set; }
@@ -58,7 +58,7 @@ public class Item : IItem
 
         this.Key = $"lhm{identifierDots.ToLower()}";
 
-        this.AddPreprocessor(new DefaultPreprocessor(this.Key));
+        this.AddPreprocessor(new Zabbix.DefaultPreprocessor(this.Key));
         this.AddTag(new ComponentTag(hardware.HardwareType));
 
         // For a complete list of LHM sensors and their units, see:
@@ -140,7 +140,7 @@ public class Item : IItem
         this.Tags.Add(tag);
     }
 
-    public void AddPreprocessor(IPreprocessor preprocessor)
+    public void AddPreprocessor(Zabbix.IPreprocessor preprocessor)
     {
         this.Preprocessing.Add(preprocessor);
     }

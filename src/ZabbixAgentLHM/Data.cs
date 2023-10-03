@@ -7,8 +7,11 @@ namespace ZabbixAgentLHM
 {
     public class Data
     {
+        [YamlIgnore]
+        public const string GroupName = "Templates/LibreHardwareMonitor";
+
         [YamlMember(Alias = "ZabbixExport")]
-        public Export Export { get; } = new Export();
+        public Zabbix.Export Export { get; }
 
         private ComputerHardware[] hardwareTypes;
 
@@ -16,18 +19,11 @@ namespace ZabbixAgentLHM
 
         public Data(
             ComputerHardware[] hardwareTypes,
-            SensorType[] sensorTypes,
-            string templateName,
-            string groupName)
+            SensorType[] sensorTypes)
         {
             this.hardwareTypes = hardwareTypes;
             this.sensorTypes = sensorTypes;
-
-            var template = new Template(templateName);
-            template.SetGroup(new TemplateGroup(groupName));
-
-            this.Export.SetTemplate(template);
-            this.Export.SetGroup(new ExportGroup(groupName));
+            this.Export = new Zabbix.Export(Data.GroupName);
         }
 
         public void Gather()
