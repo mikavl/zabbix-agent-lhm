@@ -28,33 +28,6 @@ public class Program
         Template
     }
 
-    public static T[] TypesFromString<T>(string typesString) where T : struct, System.Enum
-    {
-        T type;
-        var types = new List<T>();
-
-        foreach (var typeString in typesString.Split(","))
-        {
-            if (typeString.ToLower().Equals("all"))
-            {
-                foreach (T t in Enum.GetValues(typeof(T)))
-                {
-                    types.Add(t);
-                }
-            }
-            else if (Enum.TryParse<T>(typeString, true, out type))
-            {
-                types.Add(type);
-            }
-            else
-            {
-                throw new System.Exception($"Unknown type {typeString}");
-            }
-        }
-
-        return types.ToArray();
-    }
-
     public static Option<string> NewStringOptionWithAlias(
         string name,
         string alias,
@@ -165,8 +138,8 @@ public class Program
         string sensorTypesString,
         string output)
     {
-        SensorType[] sensorTypes = TypesFromString<SensorType>(sensorTypesString);
-        Utilities.ComputerHardware[] hardwareTypes = TypesFromString<Utilities.ComputerHardware>(hardwareTypesString);
+        SensorType[] sensorTypes = Utilities.Types.FromString<SensorType>(sensorTypesString);
+        Utilities.ComputerHardware[] hardwareTypes = Utilities.Types.FromString<Utilities.ComputerHardware>(hardwareTypesString);
 
         var data = new Data(hardwareTypes, sensorTypes);
 
