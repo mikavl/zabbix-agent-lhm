@@ -18,10 +18,6 @@ public class Program
 
     public const string DefaultSensorTypes = "fan,power,temperature";
 
-    public const string DefaultTemplateName = "Template App LibreHardwareMonitor";
-
-    public const string DefaultGroupName = "Templates/LibreHardwareMonitor";
-
     public const string DefaultOutput = ""; // stdout
 
     public const string Description = "Zabbix agent integration with LibreHardwareMonitor";
@@ -114,18 +110,6 @@ public class Program
             "Save Zabbix template to this file instead of stdout",
             null);
 
-        Option<string> groupNameOption = NewStringOptionWithAlias(
-            "--group-name",
-            "-g",
-            "Name of the Zabbix template group",
-            DefaultGroupName);
-
-        Option<string> templateNameOption = NewStringOptionWithAlias(
-            "--template-name",
-            "-n",
-            "Name of the Zabbix template",
-            DefaultTemplateName);
-
         Command gatherCommand = NewCommandWithStringOptions(
             "gather",
             "Gather sensor data",
@@ -140,8 +124,6 @@ public class Program
             new Option<string>[] {
                 sensorTypesOption,
                 hardwareTypesOption,
-                templateNameOption,
-                groupNameOption,
                 outputOption
             });
 
@@ -151,8 +133,6 @@ public class Program
                 Commands.Gather,
                 hardwareTypesOptionValue,
                 sensorTypesOptionValue,
-                DefaultTemplateName,
-                DefaultGroupName,
                 DefaultOutput),
             hardwareTypesOption,
             sensorTypesOption
@@ -161,19 +141,13 @@ public class Program
         templateCommand.SetHandler((
             hardwareTypesOptionValue,
             sensorTypesOptionValue,
-            templateNameOptionValue,
-            groupNameOptionValue,
             outputOptionValue) => Execute(
                 Commands.Template,
                 hardwareTypesOptionValue,
                 sensorTypesOptionValue,
-                templateNameOptionValue,
-                groupNameOptionValue,
                 outputOptionValue),
             hardwareTypesOption,
             sensorTypesOption,
-            templateNameOption,
-            groupNameOption,
             outputOption
         );
 
@@ -189,8 +163,6 @@ public class Program
         Commands command,
         string hardwareTypesString,
         string sensorTypesString,
-        string templateName,
-        string groupName,
         string output)
     {
         SensorType[] sensorTypes = TypesFromString<SensorType>(sensorTypesString);
