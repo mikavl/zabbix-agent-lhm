@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
-namespace ZabbixAgentLHM;
+namespace ZabbixAgentLHM.Zabbix;
 
 public class Item : IItem
 {
@@ -38,7 +38,7 @@ public class Item : IItem
     // The values are all floats except for the master item
     public string ValueType { get; set; } = "FLOAT";
 
-    public IList<ITag> Tags { get; } = new List<ITag>();
+    public IList<Zabbix.Tag> Tags { get; } = new List<Zabbix.Tag>();
 
     public Item(IHardware hardware, ISensor sensor)
     {
@@ -59,7 +59,7 @@ public class Item : IItem
         this.Key = $"lhm{identifierDots.ToLower()}";
 
         this.AddPreprocessor(new Zabbix.DefaultPreprocessor(this.Key));
-        this.AddTag(new ComponentTag(hardware.HardwareType));
+        this.AddTag(new Zabbix.Tag("Component", Utilities.Component.Name(hardware.HardwareType)));
 
         // For a complete list of LHM sensors and their units, see:
         // https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/ISensor.cs
@@ -135,7 +135,7 @@ public class Item : IItem
         this.MasterItem.Add("key", item.Key);
     }
 
-    public void AddTag(ITag tag)
+    public void AddTag(Zabbix.Tag tag)
     {
         this.Tags.Add(tag);
     }
