@@ -56,7 +56,13 @@ public class Item : IItem
         var identifierKey = special.Replace(sensor.Identifier.ToString(), "_");
         var identifierDots = slashes.Replace(identifierKey, ".");
 
-        this.Key = $"lhm{identifierDots.ToLower()}";
+        // Ensure unique keys
+        var underscores = new Regex("_[_]+");
+        var sensorKey = special.Replace(sensor.Name.ToString(), "_");
+        var sensorUnderscores = underscores.Replace(sensorKey, "_");
+        var sensorFinal = slashes.Replace(sensorUnderscores, "_");
+
+        this.Key = $"lhm{identifierDots.ToLower()}.{sensorFinal.ToLower()}";
 
         this.AddPreprocessor(new Zabbix.DefaultPreprocessor(this.Key));
         this.AddTag(new Zabbix.Tag("Component", Utilities.Component.Name(hardware.HardwareType)));

@@ -5,11 +5,13 @@ namespace ZabbixAgentLHM.Zabbix;
 
 public class Template
 {
+    private const string templateName = "Template App LibreHardwareMonitor";
+
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
-    public const string Name = "Template App LibreHardwareMonitor";
+    public string Name = Template.templateName;
 
     [YamlMember(Alias = "Template", ScalarStyle = ScalarStyle.SingleQuoted)]
-    public const string TemplateName = Template.Name;
+    public string TemplateName = Template.templateName;
 
     public IList<IGroup> Groups { get; }
 

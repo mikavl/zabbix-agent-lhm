@@ -16,7 +16,7 @@ public class MasterItem : IItem
     public string ValueType { get; } = "TEXT";
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
-    public int? Delay { get; } = 60;
+    public int? Delay { get; } = 30;
 
     [YamlMember(ScalarStyle = ScalarStyle.SingleQuoted)]
     public int? History { get; } = 0;
